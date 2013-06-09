@@ -6,7 +6,7 @@
  * @package Components
  * @author Konstantinos Filios <konfilios@gmail.com>
  */
-class CBActiveRecordBatchIterator implements Iterator
+class CBActiveRecordBatchIterator implements Iterator, Countable
 {
 	/**
 	 * Source model.
@@ -77,6 +77,13 @@ class CBActiveRecordBatchIterator implements Iterator
 	 * @var integer
 	 */
 	private $retrievedItemCount;
+
+	/**
+	 * Total number of items to be retrieved.
+	 *
+	 * @var integer
+	 */
+	private $totalItemCount = null;
 
 	/**
 	 * Number of items to request per batch.
@@ -222,5 +229,18 @@ class CBActiveRecordBatchIterator implements Iterator
 	public function valid()
 	{
 		return $this->isCurrentBatchValid;
+	}
+
+	/**
+	 * Total number of items to be retrieved.
+	 *
+	 * @return integer
+	 */
+	public function count()
+	{
+		if ($this->totalItemCount === null) {
+			$this->totalItemCount = $this->searchModel->count();
+		}
+		return $this->totalItemCount;
 	}
 }
