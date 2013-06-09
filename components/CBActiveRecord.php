@@ -275,9 +275,7 @@ class CBActiveRecord extends CActiveRecord
 	public function queryAllColumnData($valueColumns, $keyColumn = null)
 	{
 		// We'll select the key column for sure
-		if ($keyColumn) {
-			$selectColumns = $keyColumn;
-		}
+		$selectColumns = $keyColumn ?: '';
 
 		// Init hash
 		$finalArray = array();
