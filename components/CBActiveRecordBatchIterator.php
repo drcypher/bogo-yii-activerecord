@@ -76,7 +76,7 @@ class CBActiveRecordBatchIterator implements Iterator, Countable
 	 *
 	 * @var integer
 	 */
-	private $retrievedItemCount;
+	private $nextBatchOffset;
 
 	/**
 	 * Total number of items to be retrieved.
@@ -121,7 +121,7 @@ class CBActiveRecordBatchIterator implements Iterator, Countable
 	 */
 	public function getRetrievedItemCount()
 	{
-		return $this->retrievedItemCount;
+		return $this->nextBatchOffset;
 	}
 
 	/**
@@ -181,7 +181,7 @@ class CBActiveRecordBatchIterator implements Iterator, Countable
 	{
 		// Update criteria according to match current batch key and size
 		$searchModelCriteria = $this->searchModel->getDbCriteria();
-		$searchModelCriteria->offset = $this->currentBatchKey * $this->batchSize;
+		$searchModelCriteria->offset = $this->nextBatchOffset;
 		$searchModelCriteria->limit = $this->batchSize;
 
 		// Retrieve items
@@ -191,7 +191,7 @@ class CBActiveRecordBatchIterator implements Iterator, Countable
 
 		// Check the results
 		$this->currentBatchItemCount = count($this->currentBatchItems);
-		$this->retrievedItemCount += $this->currentBatchItemCount;
+		$this->nextBatchOffset += $this->currentBatchItemCount;
 
 		if ($this->currentBatchItemCount === 0) {
 			// We received nothing
@@ -205,6 +205,26 @@ class CBActiveRecordBatchIterator implements Iterator, Countable
 	}
 
 	/**
+	 * Decrements batch offset.
+	 *
+	 * This method is useful for datasets that change during iteration.
+	 *
+	 * @param integer $step
+	 */
+	public function decrementBatchOffset($step = 1)
+	{
+		if ($step < 0) {
+			throw new CException('You may not decrement batch offset by a negative number');
+		}
+
+		if ($step > $this->nextBatchOffset) {
+			throw new CException('You may not decrement batch offset with step larger than '.$this->nextBatchOffset);
+		}
+
+		$this->nextBatchOffset -= $step;
+	}
+
+	/**
 	 * Start over.
 	 */
 	public function rewind()
@@ -214,7 +234,7 @@ class CBActiveRecordBatchIterator implements Iterator, Countable
 		// Start optimistically
 		$this->moreBatchesMayExist = true;
 		// Nothing retrieved or processed so far
-		$this->retrievedItemCount = 0;
+		$this->nextBatchOffset = 0;
 		$this->processedItemCount = 0;
 
 		// Fetch first batch
