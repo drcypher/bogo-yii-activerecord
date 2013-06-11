@@ -170,6 +170,9 @@ class CBActiveRecordBatchIterator implements Iterator, Countable
 			if ($this->moreBatchesMayExist) {
 				// Try to get next batch of items
 				$this->fetchNextBatch();
+			} else {
+				// Nothing we can do, we're done
+				$this->isCurrentBatchValid = false;
 			}
 		}
 	}
