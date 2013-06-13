@@ -368,4 +368,14 @@ class CBActiveRecord extends CActiveRecord
 		}
 	}
 
+	/**
+	 * Queries for a $id=>$title hash.
+	 *
+	 * @param string $orderBy Default ordering to apply.
+	 * @return string[]
+	 */
+	public function queryTitlesById($orderBy = 'title ASC')
+	{
+		return $this->scopeOrderBy($orderBy)->queryAllColumnData('title', 'id');
+	}
 }
