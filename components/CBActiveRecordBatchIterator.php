@@ -11,9 +11,16 @@ class CBActiveRecordBatchIterator implements Iterator, Countable
 	/**
 	 * Source model.
 	 *
-	 * @var CBActiveRecord
+	 * @var CActiveRecord
 	 */
 	private $searchModel;
+
+	/**
+	 * Source criteria.
+	 *
+	 * @var CDbCriteria
+	 */
+	private $searchCriteria;
 
 	/**
 	 * Number of items to request per batch.
@@ -32,7 +39,7 @@ class CBActiveRecordBatchIterator implements Iterator, Countable
 	/**
 	 * Current batch of items to be processed.
 	 *
-	 * @var CBActiveRecord[]
+	 * @var CActiveRecord[]
 	 */
 	private $currentBatchItems;
 
@@ -134,6 +141,7 @@ class CBActiveRecordBatchIterator implements Iterator, Countable
 	{
 		$this->searchModel = $searchModel;
 		$this->setBatchSize($batchSize);
+		$this->searchCriteria = $this->searchModel->getDbCriteria();
 	}
 
 	/**
@@ -183,9 +191,10 @@ class CBActiveRecordBatchIterator implements Iterator, Countable
 	private function fetchNextBatch()
 	{
 		// Update criteria according to match current batch key and size
-		$searchModelCriteria = $this->searchModel->getDbCriteria();
-		$searchModelCriteria->offset = $this->nextBatchOffset;
-		$searchModelCriteria->limit = $this->batchSize;
+		$this->searchModel->setDbCriteria($this->searchCriteria);
+
+		$this->searchCriteria->offset = $this->nextBatchOffset;
+		$this->searchCriteria->limit = $this->batchSize;
 
 		// Retrieve items
 		$this->currentBatchItems = $this->searchModel->findAll();
@@ -262,6 +271,7 @@ class CBActiveRecordBatchIterator implements Iterator, Countable
 	public function count()
 	{
 		if ($this->totalItemCount === null) {
+			$this->searchModel->setDbCriteria($this->searchCriteria);
 			$this->totalItemCount = $this->searchModel->count();
 		}
 		return $this->totalItemCount;
