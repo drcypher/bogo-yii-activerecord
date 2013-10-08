@@ -181,6 +181,18 @@ class CBActiveRecord extends CActiveRecord
 	}
 
 	/**
+	 * Distinct select.
+	 *
+	 * @return CBActiveRecord
+	 */
+	public function scopeDistinct()
+	{
+		$this->getDbCriteria()->distinct = true;
+
+		return $this;
+	}
+
+	/**
 	 * Execute current criteria in batches of given size.
 	 *
 	 * This is especially useful if you have <b>lots</b> of data to process and you do not want
