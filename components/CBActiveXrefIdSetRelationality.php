@@ -39,4 +39,22 @@ class CBActiveXrefIdSetRelationality extends CBActiveIndexedRelationality
 			$this->modelClass.'('.$this->ownerFkName.','.$this->indexFkName.')',
 		));
 	}
+
+	/**
+	 * Filter models which are related to given indexes.
+	 *
+	 * @param type $relatedIndexes
+	 * @param type $selectFields Fields of xref table to select.
+	 * @return CActiveRecord
+	 */
+	public function scopeFilterRelatedIndexes($relatedIndexes, $selectFields = false)
+	{
+		$onCondition = $this->relationName.'.'.$this->indexFkName.' IN ('.implode(', ', $relatedIndexes).')';
+
+		return $this->owner->with(array($this->relationName=>array(
+			'select' => $selectFields,
+			'on' => $onCondition,
+			'joinType' => 'INNER JOIN'
+		)));
+	}
 }
