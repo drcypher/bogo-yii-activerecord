@@ -54,7 +54,8 @@ class CBActiveXrefIdSetRelationality extends CBActiveIndexedRelationality
 		return $this->owner->with(array($this->relationName=>array(
 			'select' => $selectFields,
 			'on' => $onCondition,
-			'joinType' => 'INNER JOIN'
+			'joinType' => 'INNER JOIN',
+			'together' => true,
 		)));
 	}
 }
