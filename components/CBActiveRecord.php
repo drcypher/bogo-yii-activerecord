@@ -390,4 +390,45 @@ class CBActiveRecord extends CActiveRecord
 	{
 		return $this->scopeOrderBy($orderBy)->queryAllColumnData('title', 'id');
 	}
+
+	/**
+	 * Save or throw exception on error.
+	 *
+	 * This differs from the standard save() in that save() returns false on error instead
+	 * of throwing an exception.
+	 *
+	 * @throws Exception
+	 */
+	public function saveOrThrow()
+	{
+		if (!$this->save()) {
+			throw new Exception($this->getErrorsAsString());
+		}
+	}
+
+	/**
+	 * Wrap $taskCallback into a transaction and run it.
+	 *
+	 * @param callable $taskCallback
+	 * @throws Exception
+	 */
+	public function runTransaction($taskCallback)
+	{
+		// Begin transaction
+		$trn = $this->getDbConnection()->beginTransaction();
+
+		try {
+			// Execute task
+			$taskCallback();
+
+			// Commit changes
+			$trn->commit();
+		} catch (Exception $ex) {
+			// Rollback
+			$trn->rollback();
+
+			// Rethrow
+			throw $ex;
+		}
+	}
 }
