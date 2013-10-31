@@ -397,11 +397,13 @@ class CBActiveRecord extends CActiveRecord
 	 * This differs from the standard save() in that save() returns false on error instead
 	 * of throwing an exception.
 	 *
+	 * @param boolean $runValidation Run validation prior to saving.
+	 * @param array $attributes Attributes to save.
 	 * @throws Exception
 	 */
-	public function saveOrThrow()
+	public function saveOrThrow($runValidation=true,$attributes=null)
 	{
-		if (!$this->save()) {
+		if (!$this->save($runValidation, $attributes)) {
 			throw new Exception($this->getErrorsAsString());
 		}
 	}
