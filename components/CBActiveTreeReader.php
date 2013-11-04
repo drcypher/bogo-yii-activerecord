@@ -112,14 +112,41 @@ class CBActiveTreeReader
 	/**
 	 * Get full tree.
 	 *
+	 * @param integer $seedNodeId
 	 * @return \BogoTree\Mutable\Tree
 	 */
-	public function getParentTree($seeNodeId)
+	public function getParentTreeOf($seedNodeId)
 	{
 		$this->resultTree = new \BogoTree\Mutable\Tree();
 
-		$this->readDownToLeaves(array(null));
+		$this->readUpToRoot($seedNodeId);
 
 		return $this->resultTree;
+	}
+
+	/**
+	 *
+	 * @param integer $pivotModel
+	 */
+	private function readUpToRoot($pivotNodeId)
+	{
+		if (!empty($pivotNodeId)) {
+			// Recurse up to the parent
+			$pivotModel = $this->modelFinder->findByPk($pivotNodeId);
+
+			$this->readUpToRoot($pivotModel->{$this->parentIdColumn});
+		}
+
+		// Find children of seed node
+		$this->modelFinder->dbCriteria->addInCondition($this->parentIdColumn, array($pivotNodeId ?: null));
+
+		$foundModels = $this->modelFinder->findAll();
+
+		foreach ($foundModels as $foundModel) {
+			$nodeId = $foundModel->{$this->idColumn};
+			$parentNodeId = $foundModel->{$this->parentIdColumn};
+
+			$this->resultTree->makeNode($foundModel, $nodeId, $parentNodeId ?: null);
+		}
 	}
 }
