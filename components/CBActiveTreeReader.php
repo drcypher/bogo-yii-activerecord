@@ -24,6 +24,7 @@ class CBActiveTreeReader
 
 	/**
 	 * Parent id column.
+	 *
 	 * @var string
 	 */
 	private $parentIdColumn;
@@ -31,10 +32,17 @@ class CBActiveTreeReader
 	/**
 	 * Result tree.
 	 *
-	 * @var CBTree
+	 * @var \BogoTree\Mutable\Tree
 	 */
-	private $tree;
+	private $resultTree;
 
+	/**
+	 * Initialize tree reader.
+	 *
+	 * @param CActiveRecord $modelFinder
+	 * @param string $idColumn
+	 * @param string $parentIdColumn
+	 */
 	public function __construct($modelFinder, $idColumn, $parentIdColumn)
 	{
 		$this->modelFinder = $modelFinder;
@@ -42,31 +50,48 @@ class CBActiveTreeReader
 		$this->parentIdColumn = $parentIdColumn;
 	}
 
+	/**
+	 * Get full tree.
+	 *
+	 * @return \BogoTree\Mutable\Tree
+	 */
 	public function getFullTree()
 	{
-		$this->tree = new \BogoTree\Mutable\Tree();
+		$this->resultTree = new \BogoTree\Mutable\Tree();
 
-		$this->read(array(null));
+		$this->readDownToLeaves(array(null));
 
-		return $this->tree;
+		return $this->resultTree;
 	}
 
+	/**
+	 * Get subtree of given model.
+	 *
+	 * @return \BogoTree\Mutable\Tree
+	 */
 	public function getSubtreeOf($rootModel)
 	{
-		$this->tree = $this->makeRoot($rootModel->{$this->parentIdColumn});
+		$this->resultTree = new \BogoTree\Mutable\Tree();
+//		$this->tree = $this->makeRoot($rootModel->{$this->parentIdColumn});
 
 		$rootNodeId = $rootModel->{$this->idColumn};
 
-		$this->tree->makeNode($rootModel, $rootNodeId);
+		$this->resultTree->makeNode($rootModel, $rootNodeId);
 
-		$this->read(array($rootNodeId));
+		$this->readDownToLeaves(array($rootNodeId));
 
-		return $this->tree;
+		return $this->resultTree;
 	}
 
-	private function read($parentIds)
+	/**
+	 * Recursively read nodes down to the leaf level.
+	 *
+	 * @param integer[] $parentIds
+	 */
+	private function readDownToLeaves($parentIds)
 	{
 		$this->modelFinder->dbCriteria->addInCondition($this->parentIdColumn, $parentIds);
+
 		$foundModels = $this->modelFinder->findAll();
 
 		$readNodeIds = array();
@@ -74,13 +99,27 @@ class CBActiveTreeReader
 			$nodeId = $foundModel->{$this->idColumn};
 			$parentNodeId = $foundModel->{$this->parentIdColumn};
 
-			$this->tree->makeNode($foundModel, $nodeId, $parentNodeId ?: null);
+			$this->resultTree->makeNode($foundModel, $nodeId, $parentNodeId ?: null);
 
 			$readNodeIds[] = $nodeId;
 		}
 
 		if (!empty($readNodeIds)) {
-			$this->read($readNodeIds);
+			$this->readDownToLeaves($readNodeIds);
 		}
+	}
+
+	/**
+	 * Get full tree.
+	 *
+	 * @return \BogoTree\Mutable\Tree
+	 */
+	public function getParentTree($seeNodeId)
+	{
+		$this->resultTree = new \BogoTree\Mutable\Tree();
+
+		$this->readDownToLeaves(array(null));
+
+		return $this->resultTree;
 	}
 }
