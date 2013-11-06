@@ -23,7 +23,7 @@ class CBReferenceModelManager extends CApplicationComponent
 	 */
 	private function getConstantName(CActiveRecord $model)
 	{
-		return strtoupper(str_replace(' ', '_', $model->title));
+		return strtoupper(str_replace(array(' ', '-', ':', '=', '+'), '_', $model->title));
 	}
 
 	/**
